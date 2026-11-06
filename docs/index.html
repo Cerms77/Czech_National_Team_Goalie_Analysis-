@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0e1e38">
+  <title>Czech Hockey | Goaltender Scouting Dashboard</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0e1e38;
+      --panel: #1b3c72;
+      --panel2: #142d52;
+      --header: #233652;
+      --text: #f1f5f9;
+      --muted: #b9c8dd;
+      --line: #45638b;
+      --red: #f36c73;
+      --blue: #66b6ff;
+      --white: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 28px 24px 70px; background: var(--bg); color: var(--text); font-family: Arial, Helvetica, sans-serif; }
+    main { max-width: 1260px; margin: auto; }
+    button, select, input { font: inherit; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .16em; font-weight: 700; font-size: 11px; color: #adc9e9; }
+    .site-header { display: flex; align-items: center; gap: 25px; padding: 15px 0 28px; border-bottom: 1px solid var(--line); margin-bottom: 26px; }
+    .site-logo { width: 114px; height: 134px; object-fit: contain; flex: 0 0 auto; }
+    h1 { font-size: clamp(28px, 3.2vw, 41px); line-height: 1.1; margin: 8px 0 9px; letter-spacing: -.02em; }
+    .subtitle { margin: 0 0 9px; color: var(--muted); font-size: 16px; }
+    .author { margin: 0; color: white; font-size: 16px; font-weight: 700; }
+    .top-meta { margin-left: auto; text-align: right; font-size: 12px; color: var(--muted); min-width: 175px; }
+    .top-meta strong { display: block; font-size: 14px; color: white; margin-bottom: 6px; }
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 24px; margin: 0 0 23px; box-shadow: 0 10px 26px rgba(0,0,0,.08); }
+    .panel-heading { display: flex; align-items: start; justify-content: space-between; gap: 22px; margin-bottom: 20px; }
+    .panel-heading h2 { font-size: clamp(20px, 2vw, 25px); margin: 6px 0 8px; }
+    .panel-heading p, .muted { font-size: 14px; color: var(--muted); line-height: 1.5; margin: 0; }
+    .section-id { font-size: 12px; color: #abc7e6; font-weight: 800; letter-spacing: .14em; }
+    .pill { border: 1px solid #7b95b4; border-radius: 999px; padding: 6px 11px; white-space: nowrap; color: #d8e8fa; font-size: 12px; font-weight: 700; }
+    .search-field, select { width: 100%; padding: 13px 15px; color: var(--text); border: 1px solid #7085a4; border-radius: 9px; background: #0b1b34; }
+    .search-field:focus, select:focus, .photo-marker:focus-visible { outline: 2px solid #91caff; outline-offset: 2px; }
+    .input-label { font-size: 13px; color: #d4e2f3; font-weight: 700; display: block; margin-bottom: 8px; }
+    .player-bar { display: flex; align-items: center; gap: 15px; padding: 16px; background: var(--panel2); border-radius: 11px; margin: 18px 0; }
+    .player-bar h3 { margin: 0 0 6px; font-size: 24px; }
+    .player-bar p { color: var(--muted); margin: 0; font-size: 14px; }
+    .avatar { display: inline-flex; align-items: center; justify-content: center; position: relative; overflow: hidden; width: 54px; height: 54px; background: #3c6599; border: 2px solid #a7c7e7; border-radius: 50%; color: #fff; font-weight: 800; flex: 0 0 auto; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+    .avatar-large { width: 66px; height: 66px; font-size: 17px; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; text-align: left; font-size: 13px; }
+    thead { background: #233653; }
+    th, td { padding: 12px 11px; border-bottom: 1px solid #45638b; white-space: nowrap; }
+    th { font-size: 12px; color: #f0f6ff; }
+    tbody tr:hover { background: #284b80; }
+    .note { color: #c6d7e9; font-size: 12px; line-height: 1.6; margin: 16px 0 0; }
+    .control-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; margin-bottom: 18px; }
+    .metric-help { color: #cfdded; font-size: 12px; margin: 8px 0 0; }
+    .explain-card { border-radius: 12px; padding: 19px 20px; background: #112a4d; border: 1px solid #7999c0; margin: 16px 0 12px; }
+    .explain-label { color: #99c8fa; font-size: 11px; font-weight: 800; letter-spacing: .14em; }
+    .explain-card h3 { font-size: 20px; margin: 8px 0 14px; }
+    .explain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .explain-grid strong { font-size: 13px; color: #fff; }
+    .explain-grid p { font-size: 14px; line-height: 1.55; color: #dae6f6; margin: 7px 0; }
+    .metric-direction { display: inline-block; border-left: 3px solid #9dd0ff; padding: 5px 0 5px 12px; color: #e1efff; font-size: 13px; font-weight: 700; margin: 12px 0 0; }
+    .scouting-example { margin-top: 19px; padding: 17px 18px; border-radius: 10px; background: #18385e; border: 1px solid #527aa4; }
+    .example-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .example-head strong { font-size: 15px; color: #ffffff; }
+    .example-players { color: #b9d7ff; font-size: 12px; font-weight: 700; }
+    .scouting-example > p { margin: 11px 0 0; color: #f1f5f9; font-size: 14px; line-height: 1.65; }
+    .scouting-example .example-disclaimer { font-size: 12px; color: #bad0e8; }
+    .overview { margin-bottom: 22px; }
+    .overview h2 { margin: 0 0 12px; font-size: clamp(20px, 2vw, 25px); }
+    .overview-kicker { margin-bottom: 12px; color: #b9cde7; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; }
+    .overview-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+    .overview-card { padding: 17px 19px; border-radius: 12px; background: #173762; border: 1px solid #52749a; }
+    .overview-card .number { display: block; font-size: clamp(24px, 2.8vw, 32px); font-weight: 800; line-height: 1.2; margin: 7px 0; color: #fff; }
+    .overview-card strong { font-size: 14px; color: #fff; }
+    .overview-card p { font-size: 12px; color: #c8d8eb; line-height: 1.4; margin: 7px 0 0; }
+    .overview-brief { background: #122b4d; border: 1px solid #52749a; border-radius: 12px; margin-top: 14px; padding: 18px 19px; }
+    .overview-brief p { color: #dee9f7; line-height: 1.55; font-size: 14px; margin: 0; }
+    .overview-details { margin-top: 13px; color: #e8f3ff; }
+    .overview-details summary { cursor: pointer; font-weight: 700; color: #c3ddff; font-size: 13px; width: fit-content; }
+    .overview-full { margin-top: 13px; border-top: 1px solid #45638b; padding-top: 14px; }
+    .overview-full h3 { margin: 14px 0 5px; font-size: 14px; color: #fff; }
+    .overview-full h3:first-child { margin-top: 0; }
+    .overview-full p { color: #d8e6f5; line-height: 1.65; margin: 0 0 10px; }
+    @media (max-width: 720px) { .overview-cards { grid-template-columns: 1fr; } }
+    @media (max-width: 620px) { .explain-grid { grid-template-columns: 1fr; gap: 5px; } }
+    .legend { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; font-size: 12px; color: #d7e6fa; }
+    .legend-item { display: inline-flex; align-items: center; gap: 7px; }
+    .legend-dot { display: inline-block; border-radius: 100%; width: 9px; height: 9px; background: var(--blue); }
+    .legend-dot.ahl { background: var(--red); }
+    .legend-line { width: 22px; border-top: 2px dashed #f9db85; }
+    .ranking-group { margin-top: 20px; padding: 17px; border-radius: 11px; background: #142d52; }
+    .ranking-group h3 { margin: 0 0 6px; font-size: 16px; }
+    .group-context { color: #bfd1e8; font-size: 12px; margin-bottom: 15px; }
+    .rank-row { display: grid; grid-template-columns: 42px minmax(112px, 200px) minmax(210px, 1fr) 90px; gap: 14px; align-items: center; min-height: 69px; border-top: 1px solid #345478; }
+    .rank-num { font-size: 13px; font-weight: 800; color: #c8def9; }
+    .rank-goalie { font-size: 13px; font-weight: 700; }
+    .rank-team { display: block; color: var(--muted); font-size: 11px; font-weight: 400; margin-top: 4px; }
+    .rank-value { text-align: right; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .rank-track { position: relative; height: 50px; }
+    .rank-track::before { content: ''; position: absolute; left: 0; right: 0; top: 25px; height: 2px; background: #577598; }
+    .benchmark { position: absolute; top: 2px; bottom: 2px; border-left: 2px dashed #f9db85; pointer-events: none; }
+    .photo-marker { position: absolute; z-index: 2; top: 50%; transform: translate(-50%, -50%); border: 0; padding: 0; background: none; cursor: pointer; }
+    .photo-marker .avatar { width: 39px; height: 39px; border-color: #e5f1fc; box-shadow: 0 2px 7px rgba(0,0,0,.45); font-size: 11px; }
+    .photo-marker:focus-visible { border-radius: 50%; }
+    .photo-marker:hover, .photo-marker:focus-visible { z-index: 10; }
+    .marker-tooltip { position: absolute; z-index: 11; left: 50%; bottom: calc(100% + 12px); transform: translateX(-50%); min-width: 210px; width: max-content; max-width: 280px; border-radius: 10px; border: 1px solid #7897b9; background: #09192f; color: white; padding: 12px; text-align: left; font-size: 12px; line-height: 1.7; box-shadow: 0 8px 24px rgba(0,0,0,.4); display: none; pointer-events: none; }
+    .marker-tooltip strong { font-size: 14px; }
+    .photo-marker:hover .marker-tooltip, .photo-marker:focus-visible .marker-tooltip { display: block; }
+    .scale-ticks { display: flex; justify-content: space-between; margin: 4px 90px 0 270px; color: #b9cbe1; font-size: 11px; }
+    .chart-container { background: #132b50; border: 1px solid #44638b; border-radius: 12px; padding: 13px; margin-top: 16px; overflow-x: auto; }
+    #scatterPlot { display: block; width: 100%; min-width: 660px; height: auto; }
+    .chart-legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 14px 0 0; font-size: 12px; color: #c7d8ea; }
+    .empty { background: #142d52; border-radius: 9px; padding: 20px; color: #c8d9eb; line-height: 1.5; }
+    .footer { color: #a9bfd8; font-size: 12px; line-height: 1.6; text-align: center; padding: 12px 0; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (max-width: 900px) { .site-header { flex-wrap: wrap; } .top-meta { margin-left: 0; text-align: left; width: 100%; } .rank-row { grid-template-columns: 30px minmax(90px, 146px) minmax(160px, 1fr) 66px; gap: 8px; } .scale-ticks { margin-left: 192px; margin-right: 66px; } }
+    @media (max-width: 620px) { body { padding: 15px 11px 45px; } .site-logo { width: 75px; height: 92px; } .site-header { gap: 14px; } .panel { padding: 17px 13px; } .control-grid { grid-template-columns: 1fr; } .panel-heading { flex-wrap: wrap; } .ranking-group { padding: 12px; overflow-x: auto; } .rank-row { min-width: 590px; } .scale-ticks { display: none; } }
+  </style>
+</head>
+<body>
+<main>
+  <header class="site-header">
+    <!-- The logo is embedded in this file: no separate image upload is required. -->
+    <img class="site-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAApgAAAOhCAMAAABl7SUqAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2VpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1QjhGRkVCQ0U4MkJFNjExOUVBOTkzQTAyOUEyOTkyNSIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDowQTc2QkM1RjY4RTMxMUU4OENGNUVDNzYyRkNFMzczRiIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDowQTc2QkM1RTY4RTMxMUU4OENGNUVDNzYyRkNFMzczRiIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBJbkRlc2lnbiBDUzYgKFdpbmRvd3MpIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InV1aWQ6NWM4ZDc2NWUtNjVhNC00NWNlLWI1ZWMtMDVkNzg3NTQyOGY1IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuaWQ6OTU4QjVFMDU5NDRGRTgxMUFBMzdCNzA1NzVCQTU1NTQiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz4xReYDAAADAFBMVEWFjKtQXIf8/P3q7/S5vs/29vkUI17P2eb8/f7x9PfCxtZ1f6LR2ufQ096JkK6qtcva3eVpcpdmcJb7/PyYpL6MmLV4gaKdqMGaoblUYIqfpr3W2OIgL2fT1uDs8PWQl7PFydeVobvu8vZgbJPe4OhHVYI5R3ijqcCJlLOWnbf09vnK1OKuuc2xtsrl5+1EUX4sO29ZZY7g5+99iaqts8d9haXy9fjd5O3i6O+RnLm1wNMYJmBMWYVdZ4/Lz9z5+vuzvdGnrcJcapI9S3v4+vt3hKbS3OjW3uo3RXd0fJ/t7vKEj67p6vDM0N2lsMfI0uHG0eC8wNHg4um6xdfDzd1BT34oOGzi5Oo/TX36+/xreJ0lNGqOlLHAytoxQHPn6e5ze561us3f5e7o7fNud5tsdZm+ydqAh6eCja3b4ux+hqarscWwu8+orsTc3ufV3uqCiann7PLT3OgzQnTEz94ZKGI2RHVlcplndJqircVxfqEuPXBFU4KSmrQbKmPh5+8eLGW4w9WMk7BKV4OzuMudpLyhrMQjMmhgaZE8SnqQm7iAi6ygp77n6vArOm5XY4xJVoJVY40kM2lgbZVNW4ZSX4k1Q3Zue58fLWVib5ZZZ5Bqd5xxep0wPnFPXonBzNwmNmuiq8K6wdPH0eD+/v7k6vHU3ena4uv2+Prw8/fM1uT+/v/Z4esdK2T19/rY4Or3+fu3vM7+///w8fXx8vXb4+z4+fvf5u7s7fH4+Pr5+fr9/f709fcWJV/t8fbl6/HR2+jj5ezr7PHu8PPy8/bo6u/e5e3N1+XHy9nz9vnl6vHm6/Lx9PiYn7jX4OrKzduTm7XY2+S+w9NveJzJzNrN0dxjbZPW3+nP0t/p7vMcK2OvtMjIy9nBxdXv8PSlq8FGUn/3+Pu9wdKxvNCHkrFcZo7Y4eq9x9m/xNQ7SHmzuct6gqPu8faborvk6vAqOG3j6fBKWYXr7/Sns8nY4ev39/mjrsbR2OTZ3+nEzdzV3Oa+yNnQ2ucTIl3///8AAACY0675AAABAHRSTlP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AU/cHJQAAVpFJREFUeNrsnXdgFWX+7pMoBwSpgUAgoROkg3QSjIggzYppgiALLC5IjUGXKIIoCeoFFBQsEbweQu9NCMFgATtNQFQUXbco68Li4u/euzOTm9OnvO/MO3PmJDNnnucfJWdaMp/zlm+NKYcgCyoGfwIIYEIQwIQAJgQBTAhgQhDAhCCACQFMCAKYEMCEIIAJAUwIApgQBDAhgAlBABMCmBAEMCGACUEAE4IAJgQwIQhgQgATggAmBAFMCGBCEMCEACYEAUwIYEIQwIQggAkBTAgCmBDAhCCACQFMCAKYEAQwIYAJQQATApgQBDAhgAlBABOCACYEMCEIYEIAE4IAJgQBTAhgQhDAhAAmBAFMCGBCEMCEIIAJAUwIApgQwIQggAkBTAgCmBAEMCGACUEAEwKYEAQwIQhgQgATggAmBDAhCGBCABOCACYEAUwIYEIQwIQAJgQBTAhgQhDAhCCACQFMCAKYEMCEBPwJAKYVuRRAJsC0JJdAE2BaE0uQCTAtyiXIBJjW5BJkAkxrcgkyAaa1uOx6+j2QCTAtx+XJ7nxu2wiQCdABZjhcHi/geX5tbZPJxAgMMMPjcud83qPV/zCPTCxanQWmEAkuB7l4n1K/MQcm7KacBqa5b9pPzrN8UK5B4dOEXb5TwTTrdfsv1YIX69kwbyAIANORU7l5b9x/mTq8VC3CuLxAEFB0GpjmzLizeLliDF5bEMClg3flZr15KpcGx0zpQ7VtEVsTYDobTGMv33/mWJ43g0zp4xzp0K3iIlMApuPB1A8Acd9jlEzJc4xv0s53jZ3g0lFgBjAYVS0MNv0nfM7TxL43lzxBtemxAZNoXjWA6UQwz/B5y37NMsim/+BeVC55F6OlXXLz46dXh66wDDO5w8D0wdDW+/Z/nvJRnH42/QeeSqWDyadeYLic+LajTgwj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" alt="Český hokej logo">
+    <div>
+      <div class="eyebrow">Czech Hockey · Scouting Analytics</div>
+      <h1>Czech National Team Goaltender Evaluation</h1>
+      <p class="subtitle">NHL &amp; AHL Advanced Analytics | Scouting Dashboard</p>
+      <p class="author">Milan James Cermak</p>
+    </div>
+    <div class="top-meta"><strong id="databaseCount">Loading goaltenders…</strong><span>League-adjusted statistical comparisons</span></div>
+  </header>
+
+  <section class="overview" aria-labelledby="overviewHeading">
+    <div class="overview-kicker">Independent demonstration · 2026–27 season-to-date sample</div>
+    <h2 id="overviewHeading">Model Overview</h2>
+    <div class="overview-cards">
+      <div class="overview-card"><strong>Leagues Evaluated</strong><span class="number">NHL &amp; AHL</span><p>Each league is evaluated against its own benchmark</p></div>
+      <div class="overview-card"><strong>Czech Goaltenders</strong><span class="number" id="czechGoalieCount">—</span><p>Unique names in the current dashboard dataset</p></div>
+    </div>
+    <div class="overview-brief">
+      <p>Compare Czech NHL and AHL goaltenders with their league and Czech peers. Explore workload, shot difficulty, shot-stopping results, and available advanced statistics. This is a sample project; data will be refreshed closer to the 2027 IIHF World Championship.</p>
+      <details class="overview-details">
+        <summary>Read Full Executive Summary</summary>
+        <div class="overview-full">
+          <h3>Project Objective</h3>
+          <p>The models below examine Czech goaltenders competing in the NHL and AHL, comparing their individual performance against league-wide and Czech goaltending averages. This is a sample project; statistics will be updated at a later date before the 2027 IIHF World Championship.</p>
+          <h3>Analytical Approach</h3>
+          <p>The models evaluate traditional statistics such as save percentage, goals against average, and total saves, alongside available advanced analytics including Goals Saved Above Expected (GSAx), high-danger scoring opportunities, low-danger goals allowed, and rebound control.</p>
+          <p>By examining both the quality of scoring chances faced and a goaltender's performance against expectations, the model aims to provide additional context beyond traditional statistics and team defensive performance.</p>
+          <h3>Application to National Team Scouting</h3>
+          <p>The interactive dashboard allows users to search individual goaltenders, review statistical rankings, and compare performances within their respective leagues. The model is designed to be updated with new NHL and AHL data ahead of future international tournaments, including the 2027 IIHF World Championship.</p>
+          <p>This project is a developmental demonstration intended to help decision-making, but it is not a replacement for professional scouting and video evaluation.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="profileHeading">
+    <div class="panel-heading">
+      <div><span class="section-id">01 / SCOUTING PROFILE</span><h2 id="profileHeading">Goaltender Search</h2><p>Search a Czech goaltender to view their statistics and individual rankings.</p></div>
+      <span class="pill">NHL + AHL</span>
+    </div>
+    <label class="input-label" for="goalieSearch">Goaltender name</label>
+    <input class="search-field" id="goalieSearch" type="search" list="goalieNames" placeholder="Start typing a goalie name…" autocomplete="off">
+    <datalist id="goalieNames"></datalist>
+
+    <div class="player-bar" id="playerBar">
+      <div id="profileAvatar" class="avatar avatar-large">—</div>
+      <div><h3 id="playerName">Loading goaltenders…</h3><p id="playerInfo">Reading the Python model output</p></div>
+    </div>
+    <div class="table-wrap">
+      <table aria-label="Selected goalie's statistics and comparisons">
+        <thead><tr>
+          <th>Statistic</th><th>League</th><th>Player Value</th><th>League Rank</th><th>League Average</th><th>Czech Rank</th><th>Czech Average</th>
+        </tr></thead>
+        <tbody id="statsTable"></tbody>
+      </table>
+    </div>
+    <p class="note">Rankings and averages come from the Python export. NHL and AHL comparisons are calculated separately; the current minimum-games setting is the one used when you ran Python.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="leaderboardHeading">
+    <div class="panel-heading">
+      <div><span class="section-id">02 / INTERACTIVE LEADERBOARD</span><h2 id="leaderboardHeading">Rank Czech Goaltenders</h2><p>Choose a statistic and league. The goaltenders are sorted from highest-ranked to lowest-ranked, with each marker positioned on the metric scale.</p></div>
+    </div>
+    <div class="control-grid">
+      <div><label class="input-label" for="metricSelect">Statistic</label><select id="metricSelect" aria-label="Select goaltending statistic"><option>Loading statistics…</option></select></div>
+      <div><label class="input-label" for="leagueSelect">League</label><select id="leagueSelect"><option value="NHL">NHL only</option><option value="AHL">AHL only</option><option value="Both">NHL + AHL (separate benchmarks)</option></select></div>
+    </div>
+    <div class="explain-card" aria-live="polite">
+      <div class="explain-label">STATISTIC OVERVIEW</div>
+      <h3 id="metricDefinitionTitle">Save Percentage (SV%)</h3>
+      <div class="explain-grid">
+        <div><strong>Definition</strong><p id="metricDefinition">The share of shots on goal that the goalie stops.</p></div>
+        <div><strong>Scouting significance</strong><p id="metricSignificance">A quick look at shot stopping, but it does not explain how difficult the shots were.</p></div>
+      </div>
+      <p class="metric-direction" id="metricDirection">Higher is generally better.</p>
+      <div class="scouting-example" aria-live="polite">
+        <div class="example-head">
+          <strong>Scouting Example</strong>
+          <span class="example-players">Tomáš Vokoun vs. Dominik Hašek</span>
+        </div>
+        <p id="metricExample">Imagine Dominik Hašek stops 93 of 100 shots and Tomáš Vokoun stops 91 of 100. Hašek has the higher save percentage. A scout would still compare the difficulty of the shots faced before drawing a conclusion.</p>
+        <p class="example-disclaimer">Illustrative numbers only. These are not historical statistics for either goaltender.</p>
+      </div>
+    </div>
+    <p class="metric-help" id="metricHelp">The chosen statistic also controls the X–Y chart below.</p>
+    <div class="legend" style="margin-top:12px">
+      <span class="legend-item"><span class="legend-dot"></span> NHL</span>
+      <span class="legend-item"><span class="legend-dot ahl"></span> AHL</span>
+      <span class="legend-item"><span class="legend-line"></span> League average</span>
+    </div>
+    <div id="leaderboardContent" aria-live="polite"></div>
+    <p class="note">Hover over (or click/focus) a player marker for name, team, selected statistic, SV%, and GAA. Roster photos will appear automatically if added in <code>docs/images/goalies/</code> with filenames such as <code>lukas-dostal.png</code>. Until then, markers show player initials.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="positionHeading">
+    <div class="panel-heading">
+      <div><span class="section-id">03 / LEAGUE-RELATIVE POSITION MAP</span><h2 id="positionHeading">Performance vs. League Average</h2><p>The Y-axis shows the selected statistic. The X-axis groups goalies by their league ranking. The Y-axis displays the selected statistic, with a dashed line for the league average.</p></div>
+      <span class="pill">Synced with section 02</span>
+    </div>
+    <div class="chart-container"><svg id="scatterPlot" viewBox="0 0 1060 480" role="img" aria-label="Goalie performance versus league benchmark scatter plot"><text x="38" y="52" fill="white">Loading chart…</text></svg></div>
+    <div class="chart-legend" id="chartLegend"></div>
+    <p class="note" id="chartFootnote">Dashed horizontal line = the relevant league average. When both leagues are displayed, each league has its own benchmark. X-axis bands are approximate league-rank groups; 'average' is not a statistical test. The X-axis does not make NHL and AHL ability equal. Workload statistics use workload labels rather than performance labels.</p>
+  </section>
+  <p class="footer">Czech Goaltending Evaluation · Analytical decision support · Source values and league rankings from your Python model</p>
+</main>
+
+<script>
+'use strict';
+
+let goalieData = [];
+let goalieNames = [];
+const searchBox = document.getElementById('goalieSearch');
+const tableBody = document.getElementById('statsTable');
+const metricSelect = document.getElementById('metricSelect');
+const leagueSelect = document.getElementById('leagueSelect');
+const leaderboardContent = document.getElementById('leaderboardContent');
+const chartSvg = document.getElementById('scatterPlot');
+const svgNS = 'http://www.w3.org/2000/svg';
+
+// These explanations are designed to be easy to translate in coaching conversations.
+const metricDefinitions = {
+  'SV%': {
+    definition: 'The percentage of shots on goal that the goalie saves. For example, .900 means 90 saves out of 100 shots.',
+    significance: 'Shows how often a goalie stops the puck. It is useful, but a good defensive team may allow easier shots.',
+    direction: 'Higher is generally better. Shot difficulty still matters.'
+  },
+  'GAA': {
+    definition: 'The average number of goals a goalie allows during 60 minutes of ice time.',
+    significance: 'Shows goals allowed, but it can be strongly affected by the defense and scoring chances the goalie faces.',
+    direction: 'Lower is generally better, but team defense matters.'
+  },
+  'GSAx/60': {
+    definition: 'Goals Saved Above Expected per 60 minutes. It compares the goals allowed with the goals an average goalie would be expected to allow from those chances.',
+    significance: 'Helps us see whether a goalie stops more goals than expected, even when playing behind a weaker defense.',
+    direction: 'Higher is better. Positive means better than expected; negative means worse.'
+  },
+  'High-Danger GSAx/60': {
+    definition: 'Goals prevented above expectation per 60 minutes on dangerous scoring chances.',
+    significance: 'Helps show which goalies are especially effective against difficult chances near the net.',
+    direction: 'Higher is better. Positive means fewer high-danger goals than expected.'
+  },
+  'High-Danger Non-Goal Rate': {
+    definition: 'The share of high-danger unblocked shot attempts that do not become goals. This includes missed shots, so it is NOT the same as high-danger save percentage.',
+    significance: 'Shows how often dangerous attempts do not score, but misses and team defense influence the number.',
+    direction: 'Higher is generally better, with this important limitation.'
+  },
+  'Low-Danger Goals Above Expected/100': {
+    definition: 'Extra goals allowed, compared with expectation, for every 100 low-danger unblocked attempts.',
+    significance: 'Helps identify goalies who allow more goals than expected on easier chances, sometimes called weak goals.',
+    direction: 'Lower is better. Negative means fewer easy goals than expected.'
+  },
+  'Rebounds Above Expected/100': {
+    definition: 'Extra rebounds allowed compared with expectation, per 100 shots on goal.',
+    significance: 'Can indicate whether a goalie is controlling or absorbing shots. Defenders clearing rebounds also affect this stat.',
+    direction: 'Lower is generally better. Negative means fewer rebounds than expected.'
+  },
+  'Shots Faced/60': {
+    definition: 'How many shots on goal a goalie faces during 60 minutes.',
+    significance: 'Shows workload. More shots can mean the team allows more attempts; it does not prove the goalie is better.',
+    direction: 'Context only. Higher means more shots faced, not better performance.'
+  },
+  'xGA/60': {
+    definition: 'Expected Goals Against per 60 minutes: how many goals the chances faced would normally be expected to produce.',
+    significance: 'Shows the scoring threat the goalie faces, combining chance quality and volume. It helps explain a high GAA.',
+    direction: 'Context only. Higher means more scoring threat faced, not better performance.'
+  },
+  'High-Danger Attempts/60': {
+    definition: 'The number of dangerous unblocked shot attempts a goalie faces per 60 minutes.',
+    significance: 'Shows how often the goalie is tested by dangerous chances. It may reflect how the team defends.',
+    direction: 'Context only. Higher means more dangerous attempts faced.'
+  },
+  'Saves/60': {
+    definition: 'How many shots on goal the goalie saves in an average 60 minutes.',
+    significance: 'Shows save workload. A goalie who faces many shots may make many saves even with an average save percentage.',
+    direction: 'Context only. Higher is not automatically better.'
+  },
+  'Total Shots Faced': {
+    definition: 'The total number of shots on goal faced during the period in the data.',
+    significance: 'Shows experience and workload. It rises naturally when a goalie plays more minutes.',
+    direction: 'Context only. Higher means more shots faced.'
+  },
+  'Total Saves': {
+    definition: 'The total number of shots on goal that the goalie stopped during the period in the data.',
+    significance: 'Shows how many saves a goalie has made, but it is strongly influenced by games played.',
+    direction: 'Context only. Higher means more saves, not automatically better skill.'
+  }
+};
+// Each example uses hypothetical situations, not statistics from either player's career.
+const scoutingExamples = {
+  'SV%': 'Imagine Dominik Hašek stops 93 of 100 shots (.930), while Tomáš Vokoun stops 91 of 100 (.910). Hašek has the stronger save percentage in this example. A scout would still check which goalie faced harder chances.',
+  'GAA': 'Imagine Tomáš Vokoun allows 2.10 goals per 60 minutes and Dominik Hašek allows 2.70. Vokoun has the lower GAA. Before calling him the better goalie, a scout should check team defense and expected goals against.',
+  'GSAx/60': 'Imagine Dominik Hašek has +0.60 GSAx/60 and Tomáš Vokoun has −0.15. Hašek is preventing more goals than expected from the chances he faces. A scout would consider this evidence of stronger shot-stopping relative to shot quality.',
+  'High-Danger GSAx/60': 'Imagine Tomáš Vokoun records +0.35 high-danger GSAx/60, while Dominik Hašek records −0.10. Vokoun is outperforming expectations on dangerous chances. A scout would pair this with high-danger attempts faced to judge sample size.',
+  'High-Danger Non-Goal Rate': 'Imagine Dominik Hašek has a .760 high-danger non-goal rate and Tomáš Vokoun has .700. Fewer dangerous unblocked attempts turn into goals against Hašek. A scout must remember that missed shots count here, so this is not a pure save percentage.',
+  'Low-Danger Goals Above Expected/100': 'Imagine Tomáš Vokoun is at −0.50 and Dominik Hašek is at +0.70 low-danger goals above expected per 100 attempts. Vokoun allows fewer easy goals than expected; Hašek allows more. Here, the lower number is the stronger result.',
+  'Rebounds Above Expected/100': 'Imagine Dominik Hašek allows 1.5 fewer rebounds than expected per 100 shots (−1.50), while Tomáš Vokoun allows 1.0 more (+1.00). Hašek appears better at limiting rebounds. A scout would also watch whether rebounds are directed safely away from the slot.',
+  'Shots Faced/60': 'Imagine Tomáš Vokoun faces 36 shots per 60 minutes and Dominik Hašek faces 25. Vokoun has the heavier workload; that does not mean he is better or worse. A scout should check save quality and team defense next.',
+  'xGA/60': 'Imagine Dominik Hašek faces 3.40 expected goals against per 60, and Tomáš Vokoun faces 2.20. Hašek is facing greater overall scoring threat. A scout would use GSAx/60 to see how each goalie performed against that threat.',
+  'High-Danger Attempts/60': 'Imagine Tomáš Vokoun faces 5.0 dangerous unblocked attempts per 60 minutes and Dominik Hašek faces 2.5. Vokoun faces more dangerous opportunities, which may reflect team defense. A scout would not rank Vokoun as better on workload alone.',
+  'Saves/60': 'Imagine Dominik Hašek makes 31 saves per 60 minutes while Tomáš Vokoun makes 23. Hašek makes more saves, but he may also face more shots. A scout should also compare save percentage and scoring-chance difficulty.',
+  'Total Shots Faced': 'Imagine Tomáš Vokoun faces 650 shots and Dominik Hašek faces 400. Vokoun has faced more shots in the sample, but that may simply mean he played more minutes. A scout would check shots faced per 60 and games played.',
+  'Total Saves': 'Imagine Dominik Hašek makes 590 saves and Tomáš Vokoun makes 370. Hašek made more saves in the sample, but this number rises with ice time. A scout would review save percentage, expected goals, and workload before comparing ability.'
+};
+function updateMetricExplanation() {
+  const metric = metricSelect.value;
+  const guide = metricDefinitions[metric] || {
+    definition: 'A statistical measure used to describe goaltending performance or workload.',
+    significance: 'Compare this result with the league average and the other goalies in the same league.',
+    direction: 'Read this statistic together with playing time and sample size.'
+  };
+  document.getElementById('metricDefinitionTitle').textContent = metric;
+  document.getElementById('metricDefinition').textContent = guide.definition;
+  document.getElementById('metricSignificance').textContent = guide.significance;
+  document.getElementById('metricDirection').textContent = guide.direction;
+  document.getElementById('metricExample').textContent = scoutingExamples[metric] || 'Imagine Tomáš Vokoun and Dominik Hašek have different values for this statistic. A scout would first compare the league benchmark, games played, and shot quality before making a selection.';
+}
+const contextMetricPatterns = [/Shots Faced/i, /Saves\/60/i, /Total Saves/i, /xGA\/60/i, /Attempts\/60/i, /Total Shots/i];
+const preferredMetricOrder = ['SV%', 'GAA', 'GSAx/60', 'High-Danger GSAx/60', 'High-Danger Non-Goal Rate', 'Low-Danger Goals Above Expected/100', 'Rebounds Above Expected/100', 'Shots Faced/60', 'xGA/60', 'High-Danger Attempts/60', 'Saves/60', 'Total Shots Faced', 'Total Saves'];
+const leagueColors = { NHL: '#66b6ff', AHL: '#f36c73' };
+
+function normalized(text) {
+  return String(text ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+function slug(name) {
+  return normalized(name).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+function initials(name) {
+  return String(name).trim().split(/\s+/).map(s => s[0] || '').slice(0, 2).join('').toUpperCase();
+}
+function numeric(value) {
+  if (value === '' || value == null) return NaN;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : NaN;
+}
+function showValue(value, statistic) {
+  const n = numeric(value);
+  if (!Number.isFinite(n)) return 'N/A';
+  if (statistic === 'SV%' || /Non-Goal Rate/i.test(statistic)) return n.toFixed(3);
+  if (statistic === 'GAA') return n.toFixed(2);
+  return n.toFixed(2);
+}
+function playerPicture(name, extraClass='') {
+  const holder = document.createElement('span');
+  holder.className = 'avatar ' + extraClass;
+  holder.textContent = initials(name);
+  const img = document.createElement('img');
+  img.alt = '';
+  img.loading = 'lazy';
+  img.src = './images/goalies/' + slug(name) + '.png';
+  img.addEventListener('error', () => img.remove());
+  holder.append(img);
+  return holder;
+}
+function teamStats(name, league) {
+  const rows = goalieData.filter(r => r.Goalie === name && r.League === league);
+  const metric = label => rows.find(r => r.Statistic === label)?.Player_Value;
+  return {sv: metric('SV%'), gaa: metric('GAA')};
+}
+function showGoalie(name) {
+  tableBody.replaceChildren();
+  const records = goalieData.filter(r => r.Goalie === name);
+  const bar = document.getElementById('profileAvatar');
+  bar.replaceWith(playerPicture(name || '—', 'avatar-large'));
+  const newAvatar = document.querySelector('.player-bar > .avatar');
+  if (newAvatar) newAvatar.id = 'profileAvatar';
+  if (!records.length) {
+    document.getElementById('playerName').textContent = 'No matching goaltender';
+    document.getElementById('playerInfo').textContent = 'Try another spelling or choose a suggested name.';
+    return;
+  }
+  document.getElementById('playerName').textContent = name;
+  document.getElementById('playerInfo').textContent = [...new Set(records.map(r => `${r.League} · ${r.Team} · ${r.GP} GP`))].join('  |  ');
+  records.forEach(row => {
+    const tr = document.createElement('tr');
+    [row.Statistic, row.League, showValue(row.Player_Value, row.Statistic), row.League_Rank,
+      showValue(row.League_Average, row.Statistic), row.Czech_Rank, showValue(row.Czech_Average, row.Statistic)]
+      .forEach(value => {
+        const td = document.createElement('td');
+        td.textContent = value == null ? 'N/A' : String(value);
+        tr.appendChild(td);
+      });
+    tableBody.appendChild(tr);
+  });
+}
+function filteredRecords() {
+  const league = leagueSelect.value;
+  return goalieData.filter(row => row.Statistic === metricSelect.value && (league === 'Both' || row.League === league) && Number.isFinite(numeric(row.Player_Value)));
+}
+function availableMetrics() {
+  const league = leagueSelect.value;
+  const metrics = new Set(goalieData.filter(r => league === 'Both' || r.League === league).map(r => r.Statistic));
+  return [...metrics].sort((a,b) => {
+    const ai = preferredMetricOrder.indexOf(a), bi = preferredMetricOrder.indexOf(b);
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return 1;
+    return a.localeCompare(b);
+  });
+}
+function refreshMetricOptions() {
+  const saved = metricSelect.value;
+  const metrics = availableMetrics();
+  metricSelect.replaceChildren();
+  metrics.forEach(metric => {
+    const option = document.createElement('option');
+    option.value = metric; option.textContent = metric;
+    metricSelect.append(option);
+  });
+  metricSelect.value = metrics.includes(saved) ? saved : (metrics.includes('SV%') ? 'SV%' : (metrics[0] || ''));
+}
+function isContext(metric) {
+  return contextMetricPatterns.some(pattern => pattern.test(metric));
+}
+function rankPosition(value) {
+  const match = String(value || '').match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (!match) return NaN;
+  const rank = Number(match[1]), total = Number(match[2]);
+  if (total <= 0 || rank <= 0 || rank > total) return NaN;
+  return total === 1 ? 50 : 100 * (total - rank) / (total - 1);
+}
+function groupByLeague(rows) {
+  return ['NHL', 'AHL'].map(league => [league, rows.filter(r => r.League === league)]).filter(group => group[1].length);
+}
+function tooltipText(row) {
+  const stats = teamStats(row.Goalie, row.League);
+  return `<strong>${escapeText(row.Goalie)}</strong><br>${escapeText(row.League)} · ${escapeText(row.Team)}<br>${escapeText(row.Statistic)}: ${showValue(row.Player_Value,row.Statistic)}<br>SV%: ${showValue(stats.sv,'SV%')} &nbsp; GAA: ${showValue(stats.gaa,'GAA')}<br>League rank: ${escapeText(row.League_Rank)}`;
+}
+function escapeText(s) {
+  return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[ch]));
+}
+function renderLeaderboard(rows) {
+  leaderboardContent.replaceChildren();
+  if (!rows.length) {
+    leaderboardContent.innerHTML = '<p class="empty">This statistic is not available for the selected league in your current CSV exports.</p>';
+    return;
+  }
+  for (const [league, values] of groupByLeague(rows)) {
+    const sorted = [...values].sort((a,b) => {
+      const aRank = Number(String(a.League_Rank).split('/')[0]);
+      const bRank = Number(String(b.League_Rank).split('/')[0]);
+      return aRank - bRank;
+    });
+    const section = document.createElement('div');
+    section.className = 'ranking-group';
+    const title = document.createElement('h3');
+    title.textContent = league + ' Czech Goaltenders';
+    section.append(title);
+    const context = document.createElement('div');
+    context.className = 'group-context';
+    context.textContent = `${sorted.length} Czech goalie records · League average: ${showValue(sorted[0].League_Average, metricSelect.value)} · Sorted by league rank`;
+    section.append(context);
+
+    const raw = sorted.map(r => numeric(r.Player_Value));
+    const avg = numeric(sorted[0].League_Average);
+    const all = [...raw, avg].filter(Number.isFinite);
+    const low = Math.min(...all), high = Math.max(...all);
+    const span = high - low || Math.max(Math.abs(low) * .1, .01);
+    const min = low - span * .12, max = high + span * .12;
+    const location = value => Math.max(4,Math.min(96,(value-min)/(max-min)*100));
+
+    sorted.forEach((row, index) => {
+      const rr = document.createElement('div'); rr.className = 'rank-row';
+      const rankEl = document.createElement('span'); rankEl.className='rank-num'; rankEl.textContent = `#${String(row.Czech_Rank || '').split('/')[0] || index+1}`;
+      const nameEl = document.createElement('div'); nameEl.className = 'rank-goalie'; nameEl.textContent = row.Goalie;
+      const teamEl = document.createElement('span'); teamEl.className = 'rank-team'; teamEl.textContent = `${row.Team} · ${row.GP} GP · League ${row.League_Rank}`; nameEl.append(teamEl);
+      const track = document.createElement('div'); track.className = 'rank-track';
+      if (Number.isFinite(avg)) { const baseline = document.createElement('span'); baseline.className='benchmark'; baseline.style.left=location(avg)+'%'; track.append(baseline); }
+      const dot = document.createElement('button'); dot.type = 'button'; dot.className='photo-marker'; dot.style.left=location(numeric(row.Player_Value))+'%';
+      dot.setAttribute('aria-label',`${row.Goalie}, ${row.Statistic} ${showValue(row.Player_Value,row.Statistic)}, ${row.League_Rank}`);
+      dot.append(playerPicture(row.Goalie));
+      const tip = document.createElement('span'); tip.className='marker-tooltip'; tip.innerHTML = tooltipText(row); dot.append(tip);
+      track.append(dot);
+      const vEl = document.createElement('span'); vEl.className='rank-value'; vEl.textContent=showValue(row.Player_Value,row.Statistic);
+      rr.append(rankEl,nameEl,track,vEl); section.append(rr);
+    });
+    const axis = document.createElement('div'); axis.className='scale-ticks';
+    axis.innerHTML = `<span>${showValue(min,metricSelect.value)}</span><span>${showValue(max,metricSelect.value)}</span>`;
+    section.append(axis);
+    leaderboardContent.append(section);
+  }
+}
+
+// SVG utilities for the X-Y plot
+function svgElement(tag, attrs={}, text=null) {
+  const element = document.createElementNS(svgNS, tag);
+  Object.entries(attrs).forEach(([key,val]) => element.setAttribute(key,String(val)));
+  if (text != null) element.textContent=text;
+  return element;
+}
+function renderChart(rows) {
+  chartSvg.replaceChildren();
+  document.getElementById('chartLegend').replaceChildren();
+  if (!rows.length) {
+    chartSvg.append(svgElement('text',{x:44,y:65,fill:'#fff'},'No data for this statistic and league.'));
+    return;
+  }
+  const width = 1060, height = 480;
+  const bounds={left:90,right:width-35,top:46,bottom:height-105};
+  const plotW=bounds.right-bounds.left,plotH=bounds.bottom-bounds.top;
+  const yValues = rows.map(r=>numeric(r.Player_Value));
+  const groups=groupByLeague(rows);
+  const averages = groups.map(([,rs])=>numeric(rs[0].League_Average)).filter(Number.isFinite);
+  const minData = Math.min(...yValues,...averages), maxData=Math.max(...yValues,...averages);
+  const delta=maxData-minData || Math.max(Math.abs(minData)*.1,.01);
+  const min=minData-delta*.19,max=maxData+delta*.19;
+  const xScale = percent => bounds.left+(percent/100)*plotW;
+  const yScale = value => bounds.bottom - (value-min)/(max-min)*plotH;
+  const metric=metricSelect.value;
+  const context=isContext(metric);
+
+  // Performance/workload quartile bands on the horizontal axis.
+  for(let i=0; i<4; i++) {
+    const x=xScale(i*25);
+    chartSvg.append(svgElement('rect',{x,y:bounds.top,width:plotW/4,height:plotH,fill:i%2?'#18355c':'#1e406c','fill-opacity':'.7'}));
+  }
+  for(let t=0;t<=4;t++) {
+    const value=min+(max-min)*t/4;
+    const y=yScale(value);
+    chartSvg.append(svgElement('line',{x1:bounds.left,x2:bounds.right,y1:y,y2:y,stroke:'#5c7492','stroke-opacity':'.55'}));
+    chartSvg.append(svgElement('text',{x:bounds.left-12,y:y+4,fill:'#cad9ec','font-size':12,'text-anchor':'end'},showValue(value,metric)));
+  }
+  const labels = context
+    ? ['Low workload','Below midrange','Above midrange','High workload']
+    : ['Low performing','Below average','Average','High performing'];
+  labels.forEach((label,i)=> {
+    chartSvg.append(svgElement('text',{x:xScale(12.5+i*25),y:bounds.bottom+27,fill:'#d3e2f2','font-size':12,'text-anchor':'middle'},label));
+  });
+  chartSvg.append(svgElement('text',{x:(bounds.left+bounds.right)/2,y:height-24,fill:'#e4eef9','font-size':14,'font-weight':700,'text-anchor':'middle'}, context?'League-relative workload rank position →':'League-relative performance rank position →'));
+  chartSvg.append(svgElement('text',{x:bounds.left,y:23,fill:'#e4eef9','font-size':14,'font-weight':700},metric+' (Y-axis)'));
+
+  // Each displayed league receives its own exact benchmark.
+  for (const [league, group] of groups) {
+    const average=numeric(group[0].League_Average);
+    if(!Number.isFinite(average)) continue;
+    const y=yScale(average);
+    chartSvg.append(svgElement('line',{x1:bounds.left,x2:bounds.right,y1:y,y2:y,stroke:leagueColors[league],'stroke-width':2,'stroke-dasharray':'8 6'}));
+    chartSvg.append(svgElement('text',{x:bounds.right-5,y:y-7,fill:leagueColors[league],'font-size':11,'text-anchor':'end','font-weight':700},`${league} avg: ${showValue(average,metric)}`));
+    const legend=document.createElement('span');legend.className='legend-item';
+    legend.innerHTML=`<span style="width:22px;border-top:2px dashed ${leagueColors[league]}"></span> ${league} average`;
+    document.getElementById('chartLegend').append(legend);
+  }
+  for (const row of rows) {
+    const rank=rankPosition(row.League_Rank);
+    if (!Number.isFinite(rank)) continue;
+    const x=xScale(rank), y=yScale(numeric(row.Player_Value));
+    const group=svgElement('g',{tabindex:0,role:'img','aria-label':`${row.Goalie}, ${metric} ${showValue(row.Player_Value,metric)}, league rank ${row.League_Rank}`});
+    group.append(svgElement('circle',{cx:x,cy:y,r:19,fill:'#0c1931',stroke:leagueColors[row.League],'stroke-width':3}));
+    group.append(svgElement('text',{x,y:y+4,fill:'white','font-size':11,'font-weight':700,'text-anchor':'middle'},initials(row.Goalie)));
+    const clipId='clip-'+slug(row.Goalie)+'-'+row.League;
+    const defs=svgElement('defs'); const clip=svgElement('clipPath',{id:clipId}); clip.append(svgElement('circle',{cx:x,cy:y,r:17})); defs.append(clip); group.append(defs);
+    // Optional roster photo: keep initials if that image file has not been added yet.
+    const photoPath='./images/goalies/'+slug(row.Goalie)+'.png';
+    const probe=new Image();
+    probe.onload=()=> {
+      if(!chartSvg.contains(group)) return;
+      group.append(svgElement('image',{href:photoPath,x:x-17,y:y-17,width:34,height:34,'clip-path':`url(#${clipId})`,'preserveAspectRatio':'xMidYMid slice'}));
+    };
+    probe.src=photoPath;
+    const title=svgElement('title');title.textContent=`${row.Goalie} (${row.League} · ${row.Team})\n${metric}: ${showValue(row.Player_Value,metric)}\nLeague rank: ${row.League_Rank}\nSV%: ${showValue(teamStats(row.Goalie,row.League).sv,'SV%')} | GAA: ${showValue(teamStats(row.Goalie,row.League).gaa,'GAA')}`;group.append(title);
+    chartSvg.append(group);
+  }
+}
+function updateVisuals() {
+  updateMetricExplanation();
+  const rows=filteredRecords();
+  const context = isContext(metricSelect.value);
+  document.getElementById('metricHelp').textContent = context
+    ? 'This is a workload/context statistic, not a direct measure of goaltender quality. A higher workload is not automatically better.'
+    : 'Rankings follow the order calculated in Python, so higher or lower values can rank first depending on the statistic.';
+  renderLeaderboard(rows);
+  renderChart(rows);
+}
+
+searchBox.addEventListener('input', () => {
+  const q=normalized(searchBox.value);
+  if(!q) { if(goalieNames.length) showGoalie(goalieNames[0]); return; }
+  const name=goalieNames.find(n=>normalized(n)===q) || goalieNames.find(n=>normalized(n).includes(q));
+  showGoalie(name || '');
+});
+leagueSelect.addEventListener('change', () => { refreshMetricOptions(); updateVisuals(); });
+metricSelect.addEventListener('change', updateVisuals);
+
+fetch('./data/goalie_rankings.json', {cache: 'no-store'})
+  .then(response => {if(!response.ok) throw new Error('Ranking JSON not found. Check docs/data/goalie_rankings.json'); return response.json();})
+  .then(rows => {
+    if(!Array.isArray(rows)) throw new Error('Expected a JSON array of ranking records.');
+    goalieData=rows.filter(row=>row && row.Goalie && row.League && row.Statistic);
+    goalieNames=[...new Set(goalieData.map(r=>r.Goalie))].sort((a,b)=>a.localeCompare(b));
+    document.getElementById('databaseCount').textContent = `${goalieNames.length} Czech goalie names · ${goalieData.length} comparisons`;
+    document.getElementById('czechGoalieCount').textContent = String(goalieNames.length);
+    const options=document.getElementById('goalieNames');
+    goalieNames.forEach(name => {const opt=document.createElement('option'); opt.value=name;options.append(opt);});
+    if(goalieNames.length) showGoalie(goalieNames[0]);
+    else {document.getElementById('playerName').textContent='No goaltender records';document.getElementById('playerInfo').textContent='Check your Python export.';}
+    refreshMetricOptions();updateVisuals();
+  })
+  .catch(error => {
+    document.getElementById('databaseCount').textContent='Data unavailable';
+    document.getElementById('playerName').textContent='Could not load goalie statistics';
+    document.getElementById('playerInfo').textContent=error.message;
+    leaderboardContent.innerHTML='<p class="empty">Start the local server in Codespaces and confirm docs/data/goalie_rankings.json exists.</p>';
+    chartSvg.replaceChildren(svgElement('text',{x:35,y:60,fill:'#fff'},'JSON data could not be loaded.'));
+  });
+</script>
+</body>
+</html>
